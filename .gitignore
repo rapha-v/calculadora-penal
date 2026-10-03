@@ -1,0 +1,17 @@
+# --- Gerados pelo Gradle e pelo Kotlin (recriados automaticamente) ---
+.gradle
+build
+.kotlin
+
+# --- Configurações pessoais de editores ---
+# Podem conter caminhos da sua máquina e preferências que não interessam a ninguém
+.vscode/
+.idea/
+
+# --- Arquivos que o Windows cria sozinho nas pastas ---
+Thumbs.db
+desktop.ini
+
+# --- Segredos: nunca devem ir para o repositório ---
+.env
+*.key

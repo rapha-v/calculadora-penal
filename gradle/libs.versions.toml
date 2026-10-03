@@ -1,0 +1,7 @@
+# Versões usadas no projeto: mudou aqui, muda em todos os módulos
+[versions]
+kotlin = "2.4.20"
+
+# Plugins do Gradle. "version.ref" aponta para a versão declarada acima
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
