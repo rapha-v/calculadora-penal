@@ -36,4 +36,15 @@ class DatasTest{
     fun zDiasNegativosExcecao() {
             assertFailsWith<IllegalArgumentException> { dataDoBeneficio(inicio, -1) }
     }
+
+    @Test
+    fun terminoBateComExemploUmManualVec() {
+        assertEquals(LocalDate(2004, 8, 30), terminoDaPena(inicio, Pena(4,0,0)))
+    }
+
+    @Test
+    fun terminoBateComExemploDoisManualVec() {
+        assertEquals(LocalDate(2011, 5, 9), terminoDaPena(LocalDate(2007, 2, 10), Pena(4,3,0)))
+    }
+
 }
