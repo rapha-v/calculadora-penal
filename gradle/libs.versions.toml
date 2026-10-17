@@ -1,7 +1,9 @@
-# Versões usadas no projeto: mudou aqui, muda em todos os módulos
-[versions]
+[versions] #guardei o numero da versao
 kotlin = "2.4.20"
+kotlinx-datetime = "0.8.0"
 
-# Plugins do Gradle. "version.ref" aponta para a versão declarada acima
+[libraries] #declarei a biblioteca 
+kotlinx-datetime = {module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime"}
+
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
