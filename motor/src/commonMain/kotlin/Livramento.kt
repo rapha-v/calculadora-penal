@@ -23,7 +23,6 @@ fun fracaoDeLivramento(tipo: TipoCrime, reincidente: Boolean): Fracao? = when (t
         * ou superior a dois anos (manual VEC, pág. 7)
         *Utiliza o calendário real com base no art. 10 do código penal
         */
-
 fun penaPermiteLivramento(inicio: LocalDate, pena: Pena): Boolean {
     return terminoDaPena(inicio, pena) >= terminoDaPena(inicio, Pena(2,0,0))
 }
@@ -36,14 +35,14 @@ fun penaPermiteLivramento(inicio: LocalDate, pena: Pena): Boolean {
         * a data segue a regra de dataDoBeneficio (sem subtrair 1 dia).
         * Estimativa: os requisitos subjetivos do art. 83 do CP (comportamento etc.) não são verificados.
         */
-        fun dataDoLivramento(inicio: LocalDate, pena: Pena, tipo: TipoCrime, reincidente: Boolean): LocalDate? {
-            // 1. Tipo vedado? Se a fração for null, o Elvis executa o return e sai da função
-            val fracao = fracaoDeLivramento(tipo, reincidente) ?: return null
+fun dataDoLivramento(inicio: LocalDate, pena: Pena, tipo: TipoCrime, reincidente: Boolean): LocalDate? {
+    // 1. Tipo vedado? Se a fração for null, o Elvis executa o return e sai da função
+    val fracao = fracaoDeLivramento(tipo, reincidente) ?: return null
 
-            // 2. Pena menor que 2 anos?
-            if (!penaPermiteLivramento(inicio, pena)) return null
+     // 2. Pena menor que 2 anos?
+    if (!penaPermiteLivramento(inicio, pena)) return null
 
             
-            val dias = fracao.aplicarEm(pena.emDias(Convencao.PADRAO))
-            return dataDoBeneficio(inicio, dias) //se ainda nao retornou null nos dois primeiros testes, retorna a data prevista
-        }
+    val dias = fracao.aplicarEm(pena.emDias(Convencao.PADRAO))
+    return dataDoBeneficio(inicio, dias) //se ainda nao retornou null nos dois primeiros testes, retorna a data prevista
+}
