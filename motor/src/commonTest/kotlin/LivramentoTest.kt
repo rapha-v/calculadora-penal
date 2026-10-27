@@ -3,6 +3,7 @@ package calculadora.motor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.datetime.LocalDate
 
 class LivramentoTest {
 
@@ -27,5 +28,22 @@ class LivramentoTest {
         // vedado para primário e para reincidente
         assertNull(fracaoDeLivramento(TipoCrime.HEDIONDO_COM_MORTE, false))
         assertNull(fracaoDeLivramento(TipoCrime.HEDIONDO_COM_MORTE, true))
+    }
+
+    @Test
+    fun exigePenaDePeloMenosDoisAnos() {
+        val inicio = LocalDate(2025, 1, 1)
+        val casos = listOf( // pena, permite livramento?
+            Pair(Pena(2, 0, 0), true),    //exatamente 2 anos: "igual ou superior"
+            Pair(Pena(1, 12, 0), true),   //2 anos escritos com meses >= 12 (emDias daria 725)
+            Pair(Pena(0, 24, 0), true),   //2 anos só em meses (emDias daria 720)
+            Pair(Pena(1, 11, 30), false), //termina 1 dia antes dos 2 anos
+            Pair(Pena(1, 0, 0), false),   //abaixo
+            Pair(Pena(10, 0, 0), true),   //acima
+        )
+
+        for ((pena, esperado) in casos) {
+            assertEquals(esperado, penaPermiteLivramento(inicio, pena), "pena=$pena")
+        }
     }
 }
