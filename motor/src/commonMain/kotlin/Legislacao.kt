@@ -7,7 +7,7 @@ enum class Legislacao { LEI_11464, PACOTE_ANTICRIME, LEI_15358, LEI_15402 }
 
 private val INICIO_LEI_11464 = LocalDate(2007, 3, 29)
 private val INICIO_PACOTE_ANTICRIME = LocalDate(2020, 1, 23)
-private val INICIO_LEI_15358 = LocalDate(2026, 3, 25) 
+private val INICIO_LEI_15358 = LocalDate(2026, 3, 25) //a confirmar
 private val INICIO_LEI_15402 = LocalDate(2026, 5, 8)
 
 /**
