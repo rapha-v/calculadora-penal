@@ -46,4 +46,20 @@ class LivramentoTest {
             assertEquals(esperado, penaPermiteLivramento(inicio, pena), "pena=$pena")
         }
     }
+    @Test
+    fun dataDoLivramentoNoCasoDaReferencia() {
+        // início 27/10/2026, pena de 6 anos = 2190 dias
+        val inicio = LocalDate(2026, 10, 27)
+        val pena = Pena(6, 0, 0)
+        assertEquals(LocalDate(2028, 10, 26), dataDoLivramento(inicio, pena, TipoCrime.COMUM, false))    // 1/3 = 730 d (a referência dá 729 por usar 33,3%)
+        assertEquals(LocalDate(2029, 10, 26), dataDoLivramento(inicio, pena, TipoCrime.COMUM, true))     // 1/2 = 1095 d
+        assertEquals(LocalDate(2030, 10, 26), dataDoLivramento(inicio, pena, TipoCrime.HEDIONDO, false)) // 2/3 = 1460 d
+    }
+
+    @Test
+    fun dataDoLivramentoNaoCabe() {
+        val inicio = LocalDate(2026, 10, 27)
+        assertNull(dataDoLivramento(inicio, Pena(6, 0, 0), TipoCrime.HEDIONDO_COM_MORTE, false)) // vedado
+        assertNull(dataDoLivramento(inicio, Pena(1, 0, 0), TipoCrime.COMUM, false))              // pena < 2 anos
+    }
 }
