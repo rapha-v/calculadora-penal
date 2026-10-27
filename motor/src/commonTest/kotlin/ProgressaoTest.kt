@@ -2,6 +2,7 @@ package calculadora.motor
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.datetime.LocalDate
 
 class ProgressaoTest {
 
@@ -59,4 +60,21 @@ class ProgressaoTest {
         Triple(TipoCrime.HEDIONDO_COM_MORTE, false, Fracao(75, 100)),
         Triple(TipoCrime.HEDIONDO_COM_MORTE, true, Fracao(85, 100)),
     ))
+    
+
+    @Test
+    fun segundaProgressaoSobreOSaldo() {
+        // início 27/10/2026, pena de 6 anos = 2190 dias
+        val inicio = LocalDate(2026, 10, 27)
+        val pena = Pena(6, 0, 0)
+        val casos = listOf( // fração, data esperada da 2ª progressão
+            Pair(Fracao(16, 100), LocalDate(2028, 8, 1)),  // 350 + 16% de 1840 (294): igual à referência
+            Pair(Fracao(1, 6), LocalDate(2028, 8, 26)),    // 365 + 1/6 de 1825 (304)
+            Pair(Fracao(40, 100), LocalDate(2030, 8, 28)), // 876 + 40% de 1314 (525)
+            Pair(Fracao(70, 100), LocalDate(2032, 4, 10)), // 1533 + 70% de 657 (459)
+        )
+        for ((fracao, esperada) in casos) {
+            assertEquals(esperada, dataDaSegundaProgressao(inicio, pena, fracao), "fracao=$fracao")
+        }
+    }
 }
