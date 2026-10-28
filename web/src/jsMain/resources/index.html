@@ -4,10 +4,51 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calculadora Penal</title>
+  <style>
+    /* o resultado é texto puro; pre-line respeita as quebras de linha */
+    #resultado {white-space: pre-line; margin-top: 1em; }
+    label { display: block; margin: .5em 0; }
+  </style>
 </head>
 <body>
   <h1>Calculadora Penal</h1>
-  <pre id="saida">carregando...</pre>
+
+  <form id="formulario">
+    <fieldset>
+      <legend>Pena total (some todas as condenações)</legend>
+      <label>Anos <input id="anos" type="number" min="0" value="0"></label>
+      <label>Meses <input id="meses" type="number" min="0" value="0"></label>
+      <label>Dias <input id="dias" type="number" min="0" value="0"></label>
+    </fieldset>
+
+    <label>Data do fato (quando o crime foi cometido) <input id="dataDoFato" type="date"></label>
+    <label>Início do cumprimento da pena <input id="inicio" type="date"></label>
+
+    <!-- os "value" são iguais aos nomes do enum TipoCrime do motor -->
+    <label>Tipo de crime
+      <select id="tipo">
+        <option value="COMUM">Comum (sem violência)</option>
+        <option value="VIOLENCIA_OU_GRAVE_AMEACA">Com violência ou grave ameaça</option>
+        <option value="HEDIONDO">Hediondo ou equiparado</option>
+        <option value="HEDIONDO_COM_MORTE">Hediondo com resultado morte</option>
+      </select>
+    </label>
+
+    <label><input id="reincidente" type="checkbox"> Reincidente</label>
+
+    <label>Regime inicial fixado na sentença
+      <select id="regime">
+        <option value="FECHADO">Fechado</option>
+        <option value="SEMIABERTO">Semiaberto</option>
+      </select>
+    </label>
+
+    <label>Detração (dias de prisão provisória) <input id="detracao" type="number" min="0" value="0"></label>
+
+    <button type="submit">Calcular</button>
+  </form>
+
+  <div id="resultado"></div>
   <script src="web.js"></script>
 </body>
 </html>
