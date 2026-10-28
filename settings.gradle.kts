@@ -14,4 +14,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "calculadora-penal"
-include("motor")   // o Gradle passa a reconhecer a pasta "motor" como um módulo
+include("motor", "web")   // o Gradle passa a reconhecer a pasta "motor" como um módulo
+                          //web é o módulo do site
