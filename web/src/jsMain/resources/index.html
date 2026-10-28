@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calculadora Penal</title>
   <style>
-    /* o resultado é texto puro; pre-line respeita as quebras de linha */
-    #resultado {white-space: pre-line; margin-top: 1em; }
+    #resultado { white-space: pre-line; margin-top: 1em; }
     label { display: block; margin: .5em 0; }
   </style>
 </head>
 <body>
   <h1>Calculadora Penal</h1>
+
+  <!-- botão sempre visível; o texto da mensagem já vai codificado para URL (%20 = espaço) -->
+  <!-- rel="noopener": a aba do WhatsApp não consegue controlar esta página (segurança) -->
+  <p><a href="https://wa.me/5511989498044?text=Ol%C3%A1!%20Vim%20pela%20Calculadora%20Penal%20e%20gostaria%20de%20falar%20com%20um%20advogado."
+        target="_blank" rel="noopener">Quero Falar com um Advogado</a></p>
 
   <form id="formulario">
     <fieldset>
@@ -24,7 +28,6 @@
     <label>Data do fato (quando o crime foi cometido) <input id="dataDoFato" type="date"></label>
     <label>Início do cumprimento da pena <input id="inicio" type="date"></label>
 
-    <!-- os "value" são iguais aos nomes do enum TipoCrime do motor -->
     <label>Tipo de crime
       <select id="tipo">
         <option value="COMUM">Comum (sem violência)</option>
@@ -49,6 +52,21 @@
   </form>
 
   <div id="resultado"></div>
+
+  <!-- "hidden": só aparece depois de um cálculo bem-sucedido -->
+  <section id="contato" hidden>
+    <h2>Envie o resultado ao escritório</h2>
+    <p>Seus dados não ficam guardados neste site: eles vão apenas na mensagem que você enviar pelo WhatsApp.</p>
+    <form id="formContato">
+      <label>Nome completo* <input id="nome" type="text" autocomplete="name"></label>
+      <label>WhatsApp com DDD* <input id="whatsapp" type="tel" autocomplete="tel" placeholder="11987654321"></label>
+      <label>E-mail <input id="email" type="email" autocomplete="email"></label>
+      <label>Número do processo <input id="processo" type="text" inputmode="numeric" placeholder="NNNNNNN-DD.AAAA.J.TR.OOOO"></label>
+      <button type="submit">Quero Falar com um Advogado</button>
+    </form>
+    <div id="avisoContato"></div>
+  </section>
+
   <script src="web.js"></script>
 </body>
 </html>
