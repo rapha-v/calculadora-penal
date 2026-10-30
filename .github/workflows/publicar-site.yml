@@ -1,0 +1,55 @@
+# Publica o site no GitHub Pages sozinho, a cada push na main. (Versão automatizada!)
+# O GitHub lê este arquivo por estar em .github/workflows/ (o nome da pasta é obrigatório - NUNCA ALTERAR).
+name: Publicar site
+
+on:
+  push:
+    branches: [main]   # só a main publica
+  workflow_dispatch:   # cria o botão "Run workflow" na aba Actions, para rodar à mão
+
+# Permissões mínimas do token que o GitHub entrega a esta automação
+permissions:
+  contents: read       # ler o código
+  pages: write         #publicar no Pages
+  id-token: write      # provar ao Pages que a publicação vem deste repositório
+
+# Dois pushes seguidos: um espera o outro terminar, em vez de publicarem ao mesmo tempo
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  #1ª etapa: num computador Linux novo do GitHub, testa o motor e gera o site
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5          # baixa o repositório
+
+      - uses: actions/setup-java@v5        # instala o mesmo JDK 
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6  # guarda o cache do Gradle entre execuções
+                                              # e confere se o gradle-wrapper.jar é o oficial
+
+      # "bash ./gradlew": o gradlew foi commitado do Windows sem permissão de execução,
+      # e no Linux "./gradlew" sozinho daria "Permission denied"
+      # allTests antes: se um teste falhar, o site NÃO é publicado - importante!
+      - name: Testar o motor e gerar o site
+        run: bash ./gradlew :motor:allTests :web:jsBrowserDistribution
+
+      - uses: actions/upload-pages-artifact@v4  # empacota a pasta que vira o site
+        with:
+          path: web/build/dist/js/productionExecutable
+
+  # 2ª etapa: só roda se a 1ª deu certo (needs) e publica o pacote
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}  # o link aparece na aba Actions
+    steps:
+      - id: publicacao
+        uses: actions/deploy-pages@v4
