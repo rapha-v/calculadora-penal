@@ -37,6 +37,8 @@ fun calcular(e: Entrada): Resultado { //e vem da entrada
     require(e.detracaoDias in 0 until diasDaPena) { "Detração deve estar entre 0 e a pena" }
 
     val inicio = e.inicio.minus(e.detracaoDias, DateTimeUnit.DAY)
+    require(inicio >= e.dataDoFato) { "O início do cumprimento (já descontada a detração) não pode ser anterior à data do fato" }
+
     val legislacao = legislacaoAplicavel(e.dataDoFato)
     val fracao = fracaoDeProgressao(e.tipo, e.reincidente, legislacao)
     val primeira = dataDoBeneficio(inicio, fracao.aplicarEm(diasDaPena))

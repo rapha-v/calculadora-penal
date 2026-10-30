@@ -60,4 +60,18 @@ class CalculoTest {
         assertFailsWith<IllegalArgumentException> { calcular(base.copy(detracaoDias = -1)) }
         assertFailsWith<IllegalArgumentException> { calcular(base.copy(detracaoDias = 2190)) }
     }
+
+    @Test
+    fun rejeitaInicioAntesDoFato() {
+        //flagrante: início no próprio dia do fato é válido (não pode lançar exceção)
+        calcular(base.copy(dataDoFato = LocalDate(2026, 10, 27)))
+        // início um dia antes do fato: impossível
+        assertFailsWith<IllegalArgumentException> {
+            calcular(base.copy(dataDoFato = LocalDate(2026, 10, 28)))
+        }
+        // a detração recua o início para 27/09, antes do fato em 01/10: também impossível
+        assertFailsWith<IllegalArgumentException> {
+            calcular(base.copy(dataDoFato = LocalDate(2026, 10, 1), detracaoDias = 30))
+        }
+    }
 }

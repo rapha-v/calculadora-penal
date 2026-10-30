@@ -2,7 +2,9 @@ import calculadora.motor.*
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.datetime.LocalDate
+import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
+import kotlin.js.Date // o Date do JavaScript, só para saber a data de hoje
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.HTMLSelectElement
 
@@ -21,12 +23,17 @@ fun main() {
     formulario.addEventListener("submit", { evento ->
         evento.preventDefault() // impede o navegador de recarregar a página
         try {
+            val hoje = hoje() // lida uma vez: validação, tela e mensagem usam a mesma data
             val entrada = lerEntrada()
-            ultimoResultado = formatar(entrada, calcular(entrada))
-            saida.textContent = ultimoResultado
+            // o motor não sabe que dia é hoje (não tem relógio), por isso esta regra fica no site
+            require(entrada.dataDoFato <= hoje) { "a data do fato não pode estar no futuro" }
+            val resultado = calcular(entrada)
+            mostrar(saida, entrada, resultado, hoje)
+            ultimoResultado = comoTexto(entrada, resultado, hoje)
             contato.hidden = false // mostra o formulário de contato
         } catch (erro: IllegalArgumentException) {
             saida.textContent = "Verifique os dados: ${erro.message}"
+            saida.classList.add("erro")
             contato.hidden = true // sem resultado válido, não há o que enviar
         }
     })
@@ -73,6 +80,26 @@ private fun lerEntrada() = Entrada(
 
 // --- Formatação do resultado ---
 
+private const val AVISO = "Estimativa: as datas podem variar alguns dias e não consideram remição nem os " +
+    "requisitos subjetivos (como o comportamento), que são analisados pelo juiz."
+
+/** Um ponto da linha do tempo: o nome do benefício e a data em que ele cabe. */
+private data class Marco(val rotulo: String, val data: LocalDate)
+
+/** Data de hoje pelo relógio de quem usa o site. */
+private fun hoje(): LocalDate {
+    val agora = Date()
+    // PEGADINHA: no JavaScript, getMonth() vai de 0 (janeiro) a 11 (dezembro)
+    return LocalDate(agora.getFullYear(), agora.getMonth() + 1, agora.getDate())
+}
+
+/** "já atingida" antes de hoje, "hoje" no próprio dia, null depois. */
+private fun situacao(d: LocalDate, hoje: LocalDate): String? = when {
+    d < hoje -> "já atingida" // LocalDate é Comparable: < e > comparam datas
+    d == hoje -> "hoje"
+    else -> null
+}
+
 private fun formatar(d: LocalDate): String {
     val (ano, mes, dia) = d.toString().split("-") // "2027-10-12" → "12/10/2027"
     return "$dia/$mes/$ano"
@@ -85,24 +112,69 @@ private fun nomeDaLei(l: Legislacao) = when (l) {
     Legislacao.LEI_15402 -> "Lei 15.402/2026 (fatos a partir de 08/05/2026)"
 }
 
-private fun formatar(e: Entrada, r: Resultado): String {
-    // livramento null: o motivo vem da fração (vedado) ou, se ela existe, da pena curta
-    val livramento = r.livramento?.let { formatar(it) }
-        ?: if (fracaoDeLivramento(e.tipo, e.reincidente, r.legislacao) == null)
-            "não cabe (vedado no hediondo com resultado morte)"
-        else "não cabe (exige pena igual ou superior a 2 anos)"
+/** As datas que existem neste resultado, em ordem cronológica. */
+private fun linhaDoTempo(r: Resultado): List<Marco> = listOfNotNull(
+    r.progressaoSemiaberto?.let { Marco("Progressão ao semiaberto", it) }, // null no regime semiaberto
+    Marco("Progressão ao aberto", r.progressaoAberto),
+    r.livramento?.let { Marco("Livramento condicional", it) },             // null quando não cabe
+    Marco("Término da pena", r.terminoDaPena),
+).sortedBy { it.data } // o livramento pode cair antes ou depois do aberto, depende do caso
 
-    return listOfNotNull( // listOfNotNull descarta os itens null
-        "Legislação aplicada: ${nomeDaLei(r.legislacao)}",
-        r.progressaoSemiaberto?.let { "Progressão ao semiaberto: ${formatar(it)}" }, // null no regime semiaberto
-        "Progressão ao aberto: ${formatar(r.progressaoAberto)}",
-        "Livramento condicional: $livramento",
-        "Término da pena: ${formatar(r.terminoDaPena)}",
-        "",
-        "Estimativa: as datas podem variar alguns dias e não consideram remição nem os " +
-            "requisitos subjetivos (como o comportamento), que são analisados pelo juiz.",
-    ).joinToString("\n")
+/** Por que o livramento não cabe, ou null se ele cabe. */
+private fun motivoSemLivramento(e: Entrada, r: Resultado): String? = when {
+    r.livramento != null -> null
+    fracaoDeLivramento(e.tipo, e.reincidente, r.legislacao) == null ->
+        "vedado no hediondo com resultado morte"
+    else -> "exige pena igual ou superior a 2 anos"
 }
+
+/** Monta o resultado na página. Só textContent, nunca innerHTML (proteção contra XSS). */
+private fun mostrar(saida: Element, e: Entrada, r: Resultado, hoje: LocalDate) {
+    saida.textContent = "" // apaga o cálculo anterior
+    saida.classList.remove("erro")
+
+    saida.appendChild(elemento("h2", texto = "Datas estimadas"))
+    saida.appendChild(elemento("p", "lei", "Legislação aplicada: ${nomeDaLei(r.legislacao)}"))
+
+    val lista = elemento("ol", "linha")
+    for (marco in linhaDoTempo(r)) {
+        val estado = situacao(marco.data, hoje)
+        val item = elemento("li", if (estado != null) "marco atingido" else "marco")
+        item.appendChild(elemento("span", "rotulo", marco.rotulo))
+        item.appendChild(elemento("span", "data", formatar(marco.data)))
+        estado?.let { item.appendChild(elemento("span", "situacao", it)) }
+        lista.appendChild(item)
+    }
+    saida.appendChild(lista)
+
+    motivoSemLivramento(e, r)?.let {
+        saida.appendChild(elemento("p", "nota", "Livramento condicional: não cabe ($it)."))
+    }
+    if (e.detracaoDias > 0) {
+        saida.appendChild(elemento("p", "nota", "Detração: ${e.detracaoDias} dias já descontados."))
+    }
+    saida.appendChild(elemento("p", "aviso", AVISO))
+}
+
+/** Cria um elemento HTML. "apply" configura o objeto e devolve ele mesmo. */
+private fun elemento(tag: String, classe: String = "", texto: String = ""): Element =
+    document.createElement(tag).apply {
+        className = classe
+        textContent = texto
+    }
+
+/** O mesmo resultado em texto puro, para a mensagem do WhatsApp. */
+private fun comoTexto(e: Entrada, r: Resultado, hoje: LocalDate): String = buildList {
+    add("Legislação aplicada: ${nomeDaLei(r.legislacao)}")
+    for (marco in linhaDoTempo(r)) {
+        val estado = situacao(marco.data, hoje)?.let { " ($it)" } ?: ""
+        add("${marco.rotulo}: ${formatar(marco.data)}$estado")
+    }
+    motivoSemLivramento(e, r)?.let { add("Livramento condicional: não cabe ($it)") }
+    if (e.detracaoDias > 0) add("Detração: ${e.detracaoDias} dias")
+    add("")
+    add(AVISO)
+}.joinToString("\n")
 
 // --- Contato ---
 
@@ -139,5 +211,5 @@ private fun montarMensagem(): String {
         "",
         "Resultado do cálculo:",
         ultimoResultado,
-    ).joinToString("\n")
+    ).joinToString("\n") //separa os itens na mensagem
 }
