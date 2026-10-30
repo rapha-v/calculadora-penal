@@ -36,8 +36,8 @@ jobs:
       # "bash ./gradlew": o gradlew foi commitado do Windows sem permissão de execução,
       # e no Linux "./gradlew" sozinho daria "Permission denied"
       # allTests antes: se um teste falhar, o site NÃO é publicado - importante!
-      - name: Testar o motor e gerar o site
-        run: bash ./gradlew :motor:allTests :web:jsBrowserDistribution
+      - name: Testar o motor e a API e gerar o site
+        run: bash ./gradlew :motor:allTests :api:test :web:jsBrowserDistribution
 
       - uses: actions/upload-pages-artifact@v4  # empacota a pasta que vira o site
         with:

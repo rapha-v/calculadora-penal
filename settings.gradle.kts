@@ -14,5 +14,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "calculadora-penal"
-include("motor", "web")   // o Gradle passa a reconhecer a pasta "motor" como um módulo
-                          //web é o módulo do site
+include("motor", "web", "api")   // o Gradle passa a reconhecer a pasta "motor" como um módulo
+                                 //web é o módulo do site
+                                 //api registra a api ktor

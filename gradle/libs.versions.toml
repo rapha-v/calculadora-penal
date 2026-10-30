@@ -1,9 +1,17 @@
 [versions] #guardei o numero da versao
 kotlin = "2.4.20"
 kotlinx-datetime = "0.8.0"
+ktor = "3.6.0"
 
 [libraries] #declarei a biblioteca 
 kotlinx-datetime = {module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime"}
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }          # o servidor HTTP em si
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
