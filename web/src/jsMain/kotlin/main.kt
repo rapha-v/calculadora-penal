@@ -31,22 +31,22 @@ fun main() {
     val contato = document.getElementById("contato") as HTMLElement
 
         // o Ktor troca "navegador" por "api" antes de entregar a página; no Pages fica "navegador"
-    val modoApi = document.querySelector("meta[name=modo]")?.getAttribute("content") == "api" // NOVO
+    val modoApi = document.querySelector("meta[name=modo]")?.getAttribute("content") == "api" 
 
     formulario.addEventListener("submit", { evento ->
         evento.preventDefault()
-        escopo.launch { // NOVO: inicia a coroutine e devolve na hora; a página não trava esperando
+        escopo.launch { //inicia a coroutine e devolve na hora; a página não trava esperando
             try {
                 val hoje = hoje()
                 val entrada = lerEntrada()
                 require(entrada.dataDoFato <= hoje) { "a data do fato não pode estar no futuro" }
-                val resultado = if (modoApi) calcularPelaApi(entrada) else calcular(entrada) // NOVO
-                mostrar(saida, entrada, resultado, hoje, modoApi)                             // NOVO: modoApi
+                val resultado = if (modoApi) calcularPelaApi(entrada) else calcular(entrada) 
+                mostrar(saida, entrada, resultado, hoje, modoApi)                             
                 ultimoResultado = comoTexto(entrada, resultado, hoje)
                 contato.hidden = false
             } catch (erro: IllegalArgumentException) {
                 mostrarErro(saida, contato, "Verifique os dados: ${erro.message}")
-            } catch (erro: SemConexao) { // NOVO
+            } catch (erro: SemConexao) { 
                 mostrarErro(saida, contato, "Sem conexão com o servidor da API. Ele está rodando?")
             }
         }
