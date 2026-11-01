@@ -74,4 +74,32 @@ class CalculoTest {
             calcular(base.copy(dataDoFato = LocalDate(2026, 10, 1), detracaoDias = 30))
         }
     }
+
+    @Test
+    fun remicaoAntecipaComoADetracao() {
+        // os dois contam como pena cumprida: 30 dias de qualquer um dão as mesmas datas
+        val comDetracao = calcular(base.copy(detracaoDias = 30)) // datas conferidas no teste da detração
+        assertEquals(comDetracao, calcular(base.copy(remicaoDias = 30)))
+        assertEquals(comDetracao, calcular(base.copy(detracaoDias = 10, remicaoDias = 20)))
+    }
+
+    @Test
+    fun remicaoNaoEntraNaValidacaoDoFato() {
+        // fato em 20/10, início em 27/10, 30 dias remidos: o início recuado (27/09) cai antes
+        // do fato, mas é válido, porque a remição foi ganha cumprindo a pena (não pode lançar exceção)
+        calcular(base.copy(dataDoFato = LocalDate(2026, 10, 20), remicaoDias = 30))
+    }
+
+    @Test
+    fun rejeitaRemicaoInvalida() {
+        assertFailsWith<IllegalArgumentException> { calcular(base.copy(remicaoDias = -1)) }
+        // a soma igual à pena não deixa nada a cumprir
+        assertFailsWith<IllegalArgumentException> {
+            calcular(base.copy(detracaoDias = 1000, remicaoDias = 1190))
+        }
+        // detração negativa "escondida" na soma: -5 + 10 = 5 passaria só pela soma
+        assertFailsWith<IllegalArgumentException> {
+            calcular(base.copy(detracaoDias = -5, remicaoDias = 10))
+        }
+    }
 }
