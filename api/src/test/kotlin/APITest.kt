@@ -68,4 +68,13 @@ class ApiTest {
         assertTrue("<meta name=\"modo\" content=\"api\">" in pagina.bodyAsText()) // a marca foi trocada
         assertEquals(HttpStatusCode.OK, client.get("/web.js").status)
     }
+
+    @Test
+    fun remicaoChegaAoMotor() = pedir(
+        """{"anos":6,"dataDoFato":"2025-06-01","inicio":"2026-10-27","tipo":"COMUM","remicaoDias":30}"""
+    ) {
+        assertEquals(HttpStatusCode.OK, it.status)
+        // 30 dias recuam a 1ª progressão de 12/10/2027 para 12/09/2027 (mesma data do teste da detração)
+        assertTrue("\"progressaoSemiaberto\":\"2027-09-12\"" in it.bodyAsText())
+    }
 }

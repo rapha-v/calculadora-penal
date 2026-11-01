@@ -31,6 +31,7 @@ data class Pedido(
     val reincidente: Boolean = false,
     val regimeInicial: RegimeInicial = RegimeInicial.FECHADO,
     val detracaoDias: Int = 0,
+    val remicaoDias: Int = 0,
 )
 
 /** O JSON que sai. null = não se aplica, como no Resultado do motor. */
@@ -55,6 +56,7 @@ fun Pedido.paraEntrada() = Entrada(
     reincidente = reincidente,
     regimeInicial = regimeInicial,
     detracaoDias = detracaoDias,
+    remicaoDias = remicaoDias,
 )
 
 fun Resultado.paraResposta() = Resposta(

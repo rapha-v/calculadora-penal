@@ -90,6 +90,7 @@ private fun lerEntrada() = Entrada(
     reincidente = campo("reincidente").checked,
     regimeInicial = RegimeInicial.valueOf(lista("regime").value),
     detracaoDias = numero("detracao"),
+    remicaoDias = numero("remicao"),
 )
 
 // --- API ---
@@ -102,6 +103,7 @@ private suspend fun calcularPelaApi(e: Entrada): Resultado {
         "dataDoFato" to e.dataDoFato.toString(), "inicio" to e.inicio.toString(), // "aaaa-mm-dd"
         "tipo" to e.tipo.name, "reincidente" to e.reincidente,                    // enum vai pelo nome
         "regimeInicial" to e.regimeInicial.name, "detracaoDias" to e.detracaoDias,
+        "remicaoDias" to e.remicaoDias,
     )
     val resposta = try {
         window.fetch("/calcular", RequestInit(
@@ -132,7 +134,7 @@ private fun mostrarErro(saida: Element, contato: HTMLElement, mensagem: String) 
 
 // --- Formatação do resultado ---
 
-private const val AVISO = "Estimativa: as datas podem variar alguns dias e não consideram remição nem os " +
+private const val AVISO = "Estimativa: as datas podem variar alguns dias e não consideram remição futura nem os " +
     "requisitos subjetivos (como o comportamento), que são analisados pelo juiz."
 
 /** Um ponto da linha do tempo: o nome do benefício e a data em que ele cabe. */
@@ -203,7 +205,10 @@ private fun mostrar(saida: Element, e: Entrada, r: Resultado, hoje: LocalDate, p
         saida.appendChild(elemento("p", "nota", "Livramento condicional: não cabe ($it)."))
     }
     if (e.detracaoDias > 0) {
-    saida.appendChild(elemento("p", "nota", "Detração: ${e.detracaoDias} dias já descontados."))
+        saida.appendChild(elemento("p", "nota", "Detração: ${e.detracaoDias} dias já descontados."))
+    }
+    if (e.remicaoDias > 0) {
+        saida.appendChild(elemento("p", "nota", "Remição: ${e.remicaoDias} dias já descontados."))
     }
     saida.appendChild(elemento("p", "nota",
     if (pelaApi) "Calculado pelo servidor (API Kotlin)." else "Calculado no seu navegador."))
@@ -226,6 +231,7 @@ private fun comoTexto(e: Entrada, r: Resultado, hoje: LocalDate): String = build
     }
     motivoSemLivramento(e, r)?.let { add("Livramento condicional: não cabe ($it)") }
     if (e.detracaoDias > 0) add("Detração: ${e.detracaoDias} dias")
+    if (e.remicaoDias > 0) add("Remição: ${e.remicaoDias} dias")
     add("")
     add(AVISO)
 }.joinToString("\n")
