@@ -16,6 +16,7 @@ kotlin {
         jsMain.dependencies {
             implementation(project(":motor"))     // o site usa o motor
             implementation(libs.kotlinx.datetime) // para criar LocalDate aqui também
+            implementation(libs.kotlinx.coroutines.core) // suspend + await para esperar o servidor sem travar a página
         }
     }
 }

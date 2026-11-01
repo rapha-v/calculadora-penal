@@ -10,6 +10,7 @@ import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import io.ktor.client.request.get
 
 class ApiTest {
 
@@ -57,5 +58,14 @@ class ApiTest {
         """{"anos":6,"inicio":"2026-10-27","tipo":"COMUM"}""" // sem dataDoFato
     ) {
         assertEquals(HttpStatusCode.BadRequest, it.status)
+    }
+
+    @Test
+    fun entregaOSiteMarcadoParaUsarAApi() = testApplication { // testa se o site  por API funciona
+        application { modulo() }
+        val pagina = client.get("/")
+        assertEquals(HttpStatusCode.OK, pagina.status)
+        assertTrue("<meta name=\"modo\" content=\"api\">" in pagina.bodyAsText()) // a marca foi trocada
+        assertEquals(HttpStatusCode.OK, client.get("/web.js").status)
     }
 }

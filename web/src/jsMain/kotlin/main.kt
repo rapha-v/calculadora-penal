@@ -7,12 +7,22 @@ import org.w3c.dom.HTMLElement
 import kotlin.js.Date // o Date do JavaScript, só para saber a data de hoje
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.HTMLSelectElement
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
+import org.w3c.fetch.RequestInit
+import kotlin.js.json
 
 // função que já existe no JavaScript do navegador; "external" só declara a assinatura para o Kotlin
 external fun encodeURIComponent(texto: String): String
 
 private const val WHATSAPP_ESCRITORIO = "5511989498044" // da documentação do escritório (a confirmar)
 private var ultimoResultado = "" // var: é trocado a cada cálculo, para ir na mensagem
+//escopo das coroutines do site: vive enquanto a página estiver aberta
+private val escopo = MainScope()
+
+/** O servidor não respondeu (desligado ou inacessível). */
+private class SemConexao : Exception()
 
 fun main() {
     // !! proposital: se o elemento não existir no HTML, é erro de programação
@@ -20,21 +30,25 @@ fun main() {
     val saida = document.getElementById("resultado")!!
     val contato = document.getElementById("contato") as HTMLElement
 
+        // o Ktor troca "navegador" por "api" antes de entregar a página; no Pages fica "navegador"
+    val modoApi = document.querySelector("meta[name=modo]")?.getAttribute("content") == "api" // NOVO
+
     formulario.addEventListener("submit", { evento ->
-        evento.preventDefault() // impede o navegador de recarregar a página
-        try {
-            val hoje = hoje() // lida uma vez: validação, tela e mensagem usam a mesma data
-            val entrada = lerEntrada()
-            // o motor não sabe que dia é hoje (não tem relógio), por isso esta regra fica no site
-            require(entrada.dataDoFato <= hoje) { "a data do fato não pode estar no futuro" }
-            val resultado = calcular(entrada)
-            mostrar(saida, entrada, resultado, hoje)
-            ultimoResultado = comoTexto(entrada, resultado, hoje)
-            contato.hidden = false // mostra o formulário de contato
-        } catch (erro: IllegalArgumentException) {
-            saida.textContent = "Verifique os dados: ${erro.message}"
-            saida.classList.add("erro")
-            contato.hidden = true // sem resultado válido, não há o que enviar
+        evento.preventDefault()
+        escopo.launch { // NOVO: inicia a coroutine e devolve na hora; a página não trava esperando
+            try {
+                val hoje = hoje()
+                val entrada = lerEntrada()
+                require(entrada.dataDoFato <= hoje) { "a data do fato não pode estar no futuro" }
+                val resultado = if (modoApi) calcularPelaApi(entrada) else calcular(entrada) // NOVO
+                mostrar(saida, entrada, resultado, hoje, modoApi)                             // NOVO: modoApi
+                ultimoResultado = comoTexto(entrada, resultado, hoje)
+                contato.hidden = false
+            } catch (erro: IllegalArgumentException) {
+                mostrarErro(saida, contato, "Verifique os dados: ${erro.message}")
+            } catch (erro: SemConexao) { // NOVO
+                mostrarErro(saida, contato, "Sem conexão com o servidor da API. Ele está rodando?")
+            }
         }
     })
 
@@ -77,6 +91,44 @@ private fun lerEntrada() = Entrada(
     regimeInicial = RegimeInicial.valueOf(lista("regime").value),
     detracaoDias = numero("detracao"),
 )
+
+// --- API ---
+
+/** Pede o cálculo ao servidor (POST /calcular) e converte o JSON da resposta em Resultado. */
+private suspend fun calcularPelaApi(e: Entrada): Resultado {
+    // json(...) cria um objeto JavaScript; os nomes são os campos do Pedido da API
+    val pedido = json(
+        "anos" to e.pena.anos, "meses" to e.pena.meses, "dias" to e.pena.dias,
+        "dataDoFato" to e.dataDoFato.toString(), "inicio" to e.inicio.toString(), // "aaaa-mm-dd"
+        "tipo" to e.tipo.name, "reincidente" to e.reincidente,                    // enum vai pelo nome
+        "regimeInicial" to e.regimeInicial.name, "detracaoDias" to e.detracaoDias,
+    )
+    val resposta = try {
+        window.fetch("/calcular", RequestInit(
+            method = "POST",
+            headers = json("Content-Type" to "application/json"),
+            body = JSON.stringify(pedido),
+        )).await() // suspende aqui até o servidor responder, sem travar a página
+    } catch (erro: Throwable) { // o fetch só falha assim quando não há conexão
+        throw SemConexao()
+    }
+    val corpo = resposta.json().await().asDynamic()
+    // 400: a mesma mensagem do motor, que roda lá no servidor
+    if (!resposta.ok) throw IllegalArgumentException(corpo.erro as String)
+    return Resultado(
+        legislacao = Legislacao.valueOf(corpo.legislacao as String),
+        progressaoSemiaberto = (corpo.progressaoSemiaberto as String?)?.let { LocalDate.parse(it) },
+        progressaoAberto = LocalDate.parse(corpo.progressaoAberto as String),
+        livramento = (corpo.livramento as String?)?.let { LocalDate.parse(it) },
+        terminoDaPena = LocalDate.parse(corpo.terminoDaPena as String),
+    )
+}
+
+private fun mostrarErro(saida: Element, contato: HTMLElement, mensagem: String) {
+    saida.textContent = mensagem
+    saida.classList.add("erro")
+    contato.hidden = true // sem resultado válido, não há o que enviar
+}
 
 // --- Formatação do resultado ---
 
@@ -129,7 +181,7 @@ private fun motivoSemLivramento(e: Entrada, r: Resultado): String? = when {
 }
 
 /** Monta o resultado na página. Só textContent, nunca innerHTML (proteção contra XSS). */
-private fun mostrar(saida: Element, e: Entrada, r: Resultado, hoje: LocalDate) {
+private fun mostrar(saida: Element, e: Entrada, r: Resultado, hoje: LocalDate, pelaApi:Boolean) {
     saida.textContent = "" // apaga o cálculo anterior
     saida.classList.remove("erro")
 
@@ -151,9 +203,11 @@ private fun mostrar(saida: Element, e: Entrada, r: Resultado, hoje: LocalDate) {
         saida.appendChild(elemento("p", "nota", "Livramento condicional: não cabe ($it)."))
     }
     if (e.detracaoDias > 0) {
-        saida.appendChild(elemento("p", "nota", "Detração: ${e.detracaoDias} dias já descontados."))
+    saida.appendChild(elemento("p", "nota", "Detração: ${e.detracaoDias} dias já descontados."))
     }
-    saida.appendChild(elemento("p", "aviso", AVISO))
+    saida.appendChild(elemento("p", "nota",
+    if (pelaApi) "Calculado pelo servidor (API Kotlin)." else "Calculado no seu navegador."))
+    saida.appendChild(elemento("p", "aviso", AVISO)) 
 }
 
 /** Cria um elemento HTML. "apply" configura o objeto e devolve ele mesmo. */
