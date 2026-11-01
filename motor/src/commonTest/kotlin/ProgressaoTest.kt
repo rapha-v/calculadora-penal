@@ -77,4 +77,14 @@ class ProgressaoTest {
             assertEquals(esperada, dataDaSegundaProgressao(inicio, pena, fracao), "fracao=$fracao")
         }
     }
+
+    @Test
+    fun lei8072Usa1SextoParaTodos() {
+        //Súmula 471 do STJ: fatos antes da Lei 11.464 seguem o art. 112 original da LEP (1/6)
+        for (tipo in TipoCrime.entries) {          
+            for (reincidente in listOf(false, true)) {
+                assertEquals(Fracao(1, 6), fracaoDeProgressao(tipo, reincidente, Legislacao.LEI_8072), "$tipo, $reincidente")
+            }
+        }
+    }
 }

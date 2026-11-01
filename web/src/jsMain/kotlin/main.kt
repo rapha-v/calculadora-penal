@@ -160,6 +160,7 @@ private fun formatar(d: LocalDate): String {
 }
 
 private fun nomeDaLei(l: Legislacao) = when (l) {
+    Legislacao.LEI_8072 -> "Lei 8.072/1990 (fatos de 26/07/1990 a 28/03/2007)"
     Legislacao.LEI_11464 -> "Lei 11.464/2007 (fatos de 29/03/2007 a 22/01/2020)"
     Legislacao.PACOTE_ANTICRIME -> "Pacote Anticrime (fatos de 23/01/2020 a 24/03/2026)"
     Legislacao.LEI_15358 -> "Lei 15.358/2026 (fatos de 25/03/2026 a 07/05/2026)"

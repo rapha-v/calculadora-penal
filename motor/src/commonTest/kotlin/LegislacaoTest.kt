@@ -11,6 +11,8 @@ class LegislacaoTest {
     fun escolheLeiPelaDataDoFato() {
         // testa o último dia de cada lei e o primeiro da seguinte (as bordas)
         val casos = listOf( // data do fato, lei esperada
+            Pair(LocalDate(1990, 7, 26), Legislacao.LEI_8072),  
+            Pair(LocalDate(2007, 3, 28), Legislacao.LEI_8072),  
             Pair(LocalDate(2007, 3, 29), Legislacao.LEI_11464),
             Pair(LocalDate(2020, 1, 22), Legislacao.LEI_11464),
             Pair(LocalDate(2020, 1, 23), Legislacao.PACOTE_ANTICRIME),
@@ -26,7 +28,7 @@ class LegislacaoTest {
     }
 
     @Test
-    fun rejeitaFatoAntesDe2007() {
-        assertFailsWith<IllegalArgumentException> { legislacaoAplicavel(LocalDate(2007, 3, 28)) }
+    fun rejeitaFatoAntesDaLei8072() {
+        assertFailsWith<IllegalArgumentException> { legislacaoAplicavel(LocalDate(1990, 7, 25)) }
     }
 }

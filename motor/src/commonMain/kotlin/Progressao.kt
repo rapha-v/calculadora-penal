@@ -18,12 +18,17 @@ fun dataDaSegundaProgressao(inicio: LocalDate, pena: Pena, fracao: Fracao): Loca
 
         /**
         * Fração de progressão (art. 112 da LEP) pela legislação vigente na data do fato.
+        * - LEI_8072: 1/6 para todos (art. 112 original da LEP; Súmula 471 do STJ; SV 26 do STF).
         * - LEI_11464: art. 2º, §2º, da Lei 8.072/90 (hediondos) e 1/6 da LEP para os demais.
         * - PACOTE_ANTICRIME: tabela da documentação da Cespedes & Lourenço Advogados.
         * - LEI_15358 e LEI_15402: só o que cada uma alterou; o resto vem da lei anterior.
         * "Reincidente" não distingue reincidência específica, como na tabela do escritório.
         **/
 fun fracaoDeProgressao(tipo: TipoCrime, reincidente: Boolean, legislacao: Legislacao): Fracao = when (legislacao) {
+    Legislacao.LEI_8072 -> when(tipo){
+        TipoCrime.COMUM,TipoCrime.VIOLENCIA_OU_GRAVE_AMEACA, TipoCrime.HEDIONDO, TipoCrime.HEDIONDO_COM_MORTE -> Fracao(1,6)
+    }
+    
     Legislacao.LEI_11464 -> when (tipo) {
         TipoCrime.COMUM, TipoCrime.VIOLENCIA_OU_GRAVE_AMEACA -> Fracao(1,6)
         TipoCrime.HEDIONDO, TipoCrime.HEDIONDO_COM_MORTE -> if (reincidente) Fracao(3, 5) else Fracao(2, 5)

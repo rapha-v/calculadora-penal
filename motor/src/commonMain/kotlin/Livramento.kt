@@ -16,7 +16,7 @@ import kotlinx.datetime.LocalDate
 fun fracaoDeLivramento(tipo: TipoCrime, reincidente: Boolean, legislacao: Legislacao): Fracao? = when (tipo) {
     TipoCrime.COMUM, TipoCrime.VIOLENCIA_OU_GRAVE_AMEACA -> if (reincidente) Fracao(1, 2) else Fracao(1, 3)
     TipoCrime.HEDIONDO -> Fracao(2, 3)
-    TipoCrime.HEDIONDO_COM_MORTE -> if(legislacao == Legislacao.LEI_11464) Fracao(2, 3) else null
+    TipoCrime.HEDIONDO_COM_MORTE -> if(legislacao == Legislacao.LEI_11464 || legislacao == Legislacao.LEI_8072) Fracao(2, 3) else null
 }
 
         /**

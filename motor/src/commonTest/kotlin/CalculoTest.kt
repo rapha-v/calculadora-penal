@@ -102,4 +102,15 @@ class CalculoTest {
             calcular(base.copy(detracaoDias = -5, remicaoDias = 10))
         }
     }
+
+    @Test
+    fun fatoAntesDe2007UsaLei8072() {
+        // hediondo com morte em 2005: 1/6 na progressão e livramento PERMITIDO (2/3);
+        // a vedação do livramento só veio com o Pacote Anticrime (2020)
+        val r = calcular(base.copy(dataDoFato = LocalDate(2005, 5, 10), tipo = TipoCrime.HEDIONDO_COM_MORTE))
+        assertEquals(Legislacao.LEI_8072, r.legislacao)
+        assertEquals(LocalDate(2027, 10, 27), r.progressaoSemiaberto) // 365 dias (1/6 de 2190)
+        assertEquals(LocalDate(2028, 8, 26), r.progressaoAberto)      // +304 dias (1/6 do saldo de 1825)
+        assertEquals(LocalDate(2030, 10, 26), r.livramento)           // 1460 dias (2/3), passa por 29/02/2028
+    }
 }
